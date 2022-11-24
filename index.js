@@ -24,6 +24,7 @@ async function run() {
     const productsCatagoreyCollection = client
       .db("E-Shoppers")
       .collection("productsCatagorey");
+    const usersCollection = client.db("E-Shoppers").collection("users");
 
     app.get("/", (req, res) => {
       res.send({
@@ -47,6 +48,29 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const allCatagory = await productsCatagoreyCollection.findOne(query);
       res.send(allCatagory);
+    });
+
+    // get users seller
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.role === "Seller" || user?.role === "Admin" });
+    });
+
+    // get users admin
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "Admin" });
+    });
+
+    // add user
+    app.post("/users", async (req, res) => {
+      const query = req.body;
+      const result = await usersCollection.insertOne(query);
+      res.send(result);
     });
   } finally {
   }
