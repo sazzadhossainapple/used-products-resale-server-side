@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const port = process.env.PORT || 5000;
@@ -30,15 +30,23 @@ async function run() {
         status: "success",
         message: "E-Shoppers Server is running.",
       });
+    });
 
-      // get all catagory
-      app.get("/catagory", async (req, res) => {
-        const query = {};
-        const catagory = await productsCatagoreyCollection
-          .find(query)
-          .toArray();
-        res.send(catagory);
-      });
+    // get all catagory
+    app.get("/allcatagory", async (req, res) => {
+      const query = {};
+      const allCatagory = await productsCatagoreyCollection
+        .find(query)
+        .toArray();
+      res.send(allCatagory);
+    });
+
+    //get by catagory id
+    app.get("/catagory/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const allCatagory = await productsCatagoreyCollection.findOne(query);
+      res.send(allCatagory);
     });
   } finally {
   }
