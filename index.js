@@ -26,6 +26,9 @@ async function run() {
       .collection("productsCatagorey");
     const usersCollection = client.db("E-Shoppers").collection("users");
     const addProductCollection = client.db("E-Shoppers").collection("Products");
+    const buyerBookProductCollection = client
+      .db("E-Shoppers")
+      .collection("buyerBookProduct");
 
     app.get("/", (req, res) => {
       res.send({
@@ -99,6 +102,15 @@ async function run() {
       });
 
       res.send(products);
+    });
+
+    // buyer book products
+    app.post("/buyerBookProducts", async (req, res) => {
+      const query = req.body;
+      const buyerBookProducts = await buyerBookProductCollection.insertOne(
+        query
+      );
+      res.send(buyerBookProducts);
     });
   } finally {
   }
