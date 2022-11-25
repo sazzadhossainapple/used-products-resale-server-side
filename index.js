@@ -43,14 +43,6 @@ async function run() {
       res.send(allCatagory);
     });
 
-    //get by catagory id
-    app.get("/catagory/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const allCatagory = await productsCatagoreyCollection.findOne(query);
-      res.send(allCatagory);
-    });
-
     // get users seller and admin
     app.get("/users/seller/:email", async (req, res) => {
       const email = req.params.email;
@@ -74,12 +66,35 @@ async function run() {
       res.send(result);
     });
 
+    // add product catagory by id
+    app.get("/catagory/:catagoryId", async (req, res) => {
+      const catagoryId = req.params.catagoryId;
+      const query = { catagoryId: catagoryId };
+      const date = { date: -1 };
+      const products = await addProductCollection
+        .find(query)
+        .sort(date)
+        .toArray();
+      res.send(products);
+    });
+
     // add products
     app.post("/addProducts", async (req, res) => {
       const query = req.body;
       const date = { date: new Date() };
       const products = await addProductCollection.insertOne({
-        product: query,
+        catagoryId: query.catagoryId,
+        productName: query.productName,
+        resalePrice: query.resalePrice,
+        orginalPrice: query.orginalPrice,
+        useYear: query.useYear,
+        location: query.location,
+        phoneNumber: query.phoneNumber,
+        productImage: query.productImage,
+        condition: query.condition,
+        description: query.description,
+        sellerName: query.sellerName,
+        email: query.email,
         date: date.date,
       });
 
