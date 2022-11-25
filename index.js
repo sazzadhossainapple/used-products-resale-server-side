@@ -104,6 +104,16 @@ async function run() {
       res.send(products);
     });
 
+    // buyer get products
+    app.get("/buyerBookProducts", async (req, res) => {
+      const email = req.query.email;
+      const filter = { email: email };
+      const allBookProducts = await buyerBookProductCollection
+        .find(filter)
+        .toArray();
+      res.send(allBookProducts);
+    });
+
     // buyer book products
     app.post("/buyerBookProducts", async (req, res) => {
       const query = req.body;
