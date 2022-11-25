@@ -78,7 +78,12 @@ async function run() {
     app.post("/addProducts", async (req, res) => {
       const query = req.body;
       const date = { date: new Date() };
-      const products = await addProductCollection.insertOne({});
+      const products = await addProductCollection.insertOne({
+        product: query,
+        date: date.date,
+      });
+
+      res.send(products);
     });
   } finally {
   }
