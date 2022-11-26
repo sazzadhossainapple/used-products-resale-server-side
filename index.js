@@ -48,9 +48,9 @@ async function run() {
     const buyerBookProductCollection = client
       .db("E-Shoppers")
       .collection("buyerBookProduct");
-    const reportedProductCollection = client
-      .db("E-Shoppers")
-      .collection("reportedProduct");
+    // const reportedProductCollection = client
+    //   .db("E-Shoppers")
+    //   .collection("reportedProduct");
 
     app.get("/", (req, res) => {
       res.send({
@@ -71,6 +71,33 @@ async function run() {
       }
       next();
     };
+
+    //jwt
+    app.put("/jwt/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: query,
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+
+      if (result) {
+        const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, {
+          expiresIn: "1d",
+        });
+        return res.send({ accessToken: token });
+      }
+      res.status(403).send({
+        accessToken: "",
+        massage: "forbidden access",
+      });
+    });
 
     // get all catagory
     app.get("/allcatagory", async (req, res) => {
@@ -240,7 +267,7 @@ async function run() {
       res.send(result);
     });
 
-    // reported products
+    // reported products updated
     app.patch("/reportedProduct/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
@@ -263,7 +290,7 @@ async function run() {
     });
 
     // buyer get products
-    app.get("/buyerBookProducts", async (req, res) => {
+    app.get("/buyerBookProducts", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const filter = { email: email };
       const allBookProducts = await buyerBookProductCollection
@@ -273,7 +300,7 @@ async function run() {
     });
 
     // buyer book products
-    app.post("/buyerBookProducts", async (req, res) => {
+    app.post("/buyerBookProducts", verifyJWT, async (req, res) => {
       const query = req.body;
       const buyerBookProducts = await buyerBookProductCollection.insertOne(
         query
