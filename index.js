@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const port = process.env.PORT || 5000;
@@ -10,6 +11,24 @@ const app = express();
 //muddleware
 app.use(cors());
 app.use(express.json());
+
+function verifyJWT(req, res, next) {
+  const authVerifyHeader = req.headers.authorization;
+  if (!authVerifyHeader) {
+    return res.status(401).send("unauthorized access");
+  }
+  const token = authVerifyHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({
+        message: "forbidden access",
+      });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kqw4pwk.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -29,6 +48,9 @@ async function run() {
     const buyerBookProductCollection = client
       .db("E-Shoppers")
       .collection("buyerBookProduct");
+    const reportedProductCollection = client
+      .db("E-Shoppers")
+      .collection("reportedProduct");
 
     app.get("/", (req, res) => {
       res.send({
@@ -36,6 +58,19 @@ async function run() {
         message: "E-Shoppers Server is running.",
       });
     });
+
+    // verfy addin madile ware
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+
+      const user = await usersCollection.findOne(query);
+
+      if (user?.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
 
     // get all catagory
     app.get("/allcatagory", async (req, res) => {
@@ -47,14 +82,28 @@ async function run() {
     });
 
     // get users seller and admin
+    // app.get("/users/seller/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { email };
+    //   const user = await usersCollection.findOne(query);
+    //   res.send({ isSeller: user?.role === "Seller" || user?.role === "Admin" });
+    // });
+    // get users seller
     app.get("/users/seller/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const user = await usersCollection.findOne(query);
-      res.send({ isSeller: user?.role === "Seller" || user?.role === "Admin" });
+      res.send({ isSeller: user?.role === "Seller" });
+    });
+    // get users buyer
+    app.get("/users/buyer/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.role === "Buyer" });
     });
 
-    // get users admin
+    // get  admin
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
@@ -70,19 +119,19 @@ async function run() {
       res.send(result);
     });
 
-    // delete by seller
+    // admin delete by seller
     app.delete("/seller/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
-      const result = await addProductCollection.deleteOne(filter);
+      const result = await usersCollection.deleteOne(filter);
       res.send(result);
     });
 
-    // delete by buyer
+    // admin delete by buyer
     app.delete("/buyer/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
-      const result = await addProductCollection.deleteOne(filter);
+      const result = await usersCollection.deleteOne(filter);
       res.send(result);
     });
 
@@ -175,10 +224,42 @@ async function run() {
         description: query.description,
         sellerName: query.sellerName,
         email: query.email,
+        sellerImage: query.sellerImage,
+        reported: false,
         date: date.date,
       });
 
       res.send(products);
+    });
+
+    //get reported products
+    app.get("/reportedProduct", async (req, res) => {
+      const result = await addProductCollection
+        .find({ reported: true })
+        .toArray();
+      res.send(result);
+    });
+
+    // reported products
+    app.patch("/reportedProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          reported: true,
+        },
+      };
+      const result = await addProductCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // delete reported product
+    app.delete("/reportedProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await addProductCollection.deleteOne(filter);
+      res.send(result);
     });
 
     // buyer get products
