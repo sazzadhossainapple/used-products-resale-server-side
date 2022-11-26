@@ -69,6 +69,23 @@ async function run() {
       res.send(result);
     });
 
+    // put user
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
     // add product catagory by id
     app.get("/catagory/:catagoryId", async (req, res) => {
       const catagoryId = req.params.catagoryId;
@@ -79,6 +96,14 @@ async function run() {
         .sort(date)
         .toArray();
       res.send(products);
+    });
+
+    // seller product find
+    app.get("/sellerProduct/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await addProductCollection.find(filter).toArray();
+      res.send(result);
     });
 
     // add products
