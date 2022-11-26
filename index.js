@@ -62,12 +62,56 @@ async function run() {
       res.send({ isAdmin: user?.role === "Admin" });
     });
 
+    // get all seller and Buyer
+    app.get("/users", async (req, res) => {
+      const role = req.query.role;
+      const filter = { role: role };
+      const result = await usersCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    // delete by seller
+    app.delete("/seller/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await addProductCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    // delete by buyer
+    app.delete("/buyer/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await addProductCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     // add user
     app.post("/users", async (req, res) => {
       const query = req.body;
       const result = await usersCollection.insertOne(query);
       res.send(result);
     });
+
+    // user seller verified updated
+    app.patch("/user/seller/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const upadatedUsers = {
+        $set: {
+          isVerifed: true,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, upadatedUsers);
+      res.send(result);
+    });
+
+    // get all user and verify check
+    // app.get("/getUsers", async (req, res) => {
+    //   const query = {};
+    //   const result = await usersCollection.find(query).toArray();
+    //   res.send(result);
+    // });
 
     // put user
     app.put("/users/:email", async (req, res) => {
@@ -103,6 +147,14 @@ async function run() {
       const email = req.params.email;
       const filter = { email: email };
       const result = await addProductCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    // seller product delete
+    app.delete("/sellerProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await addProductCollection.deleteOne(filter);
       res.send(result);
     });
 
