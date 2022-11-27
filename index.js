@@ -48,9 +48,6 @@ async function run() {
     const buyerBookProductCollection = client
       .db("E-Shoppers")
       .collection("buyerBookProduct");
-    // const reportedProductCollection = client
-    //   .db("E-Shoppers")
-    //   .collection("reportedProduct");
 
     app.get("/", (req, res) => {
       res.send({
@@ -234,6 +231,30 @@ async function run() {
       res.send(result);
     });
 
+    // saller product Advertisement
+    app.patch("/sellerProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          isAdvertisement: true,
+        },
+      };
+      const result = await addProductCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // get  Advertisement product
+    app.get("/advertisement", async (req, res) => {
+      const result = await addProductCollection
+        .find({
+          $and: [{ isAdvertisement: true, isSaleStatus: false }],
+        })
+        .toArray();
+
+      res.send(result);
+    });
+
     // add products
     app.post("/addProducts", async (req, res) => {
       const query = req.body;
@@ -253,6 +274,8 @@ async function run() {
         email: query.email,
         sellerImage: query.sellerImage,
         reported: false,
+        isAdvertisement: false,
+        isSaleStatus: false,
         date: date.date,
       });
 
