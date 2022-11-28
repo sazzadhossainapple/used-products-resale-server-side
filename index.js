@@ -50,6 +50,7 @@ async function run() {
     const buyerBookProductCollection = client
       .db("E-Shoppers")
       .collection("buyerBookProduct");
+    const paymentsCollection = client.db("E-Shoppers").collection("payments");
 
     app.get("/", (req, res) => {
       res.send({
@@ -315,7 +316,37 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
-    //payment
+
+    //payments
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const result = await paymentsCollection.insertOne(payment);
+      const id1 = payment.bookId;
+      const id2 = payment.bookingId;
+      const filter1 = { _id: ObjectId(id1) };
+      const filter2 = { _id: ObjectId(id2) };
+      const updatedDoc1 = {
+        $set: {
+          isSaleStatus: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const updatedDoc2 = {
+        $set: {
+          isSaleStatus: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const updatedResult1 = await buyerBookProductCollection.updateOne(
+        filter1,
+        updatedDoc1
+      );
+      const updatedResult2 = await addProductCollection.updateOne(
+        filter2,
+        updatedDoc2
+      );
+      res.send(result);
+    });
 
     // buyer get all products
     app.get("/buyerBookProducts", verifyJWT, async (req, res) => {
