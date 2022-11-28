@@ -59,19 +59,6 @@ async function run() {
       });
     });
 
-    // verfy addin madile ware
-    const verifyAdmin = async (req, res, next) => {
-      const decodedEmail = req.decoded.email;
-      const query = { email: decodedEmail };
-
-      const user = await usersCollection.findOne(query);
-
-      if (user?.role !== "admin") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      next();
-    };
-
     //jwt
     app.put("/jwt/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -234,7 +221,7 @@ async function run() {
     });
 
     // get  Advertisement product
-    app.get("/advertisement", async (req, res) => {
+    app.get("/advertisement", verifyJWT, async (req, res) => {
       const result = await addProductCollection
         .find({
           $and: [{ isAdvertisement: true, isSaleStatus: false }],
