@@ -4,6 +4,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
+
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -105,13 +107,6 @@ async function run() {
       res.send(allCatagory);
     });
 
-    // get users seller and admin
-    // app.get("/users/seller/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { email };
-    //   const user = await usersCollection.findOne(query);
-    //   res.send({ isSeller: user?.role === "Seller" || user?.role === "Admin" });
-    // });
     // get users seller
     app.get("/users/seller/:email", async (req, res) => {
       const email = req.params.email;
@@ -178,13 +173,6 @@ async function run() {
       const result = await usersCollection.updateOne(filter, upadatedUsers);
       res.send(result);
     });
-
-    // get all user and verify check
-    // app.get("/getUsers", async (req, res) => {
-    //   const query = {};
-    //   const result = await usersCollection.find(query).toArray();
-    //   res.send(result);
-    // });
 
     // put user
     app.put("/users/:email", async (req, res) => {
@@ -312,7 +300,24 @@ async function run() {
       res.send(result);
     });
 
-    // buyer get products
+    // payment intregation
+    app.post("/create-payment-intent", async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+    //payment
+
+    // buyer get all products
     app.get("/buyerBookProducts", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const filter = { email: email };
@@ -320,6 +325,14 @@ async function run() {
         .find(filter)
         .toArray();
       res.send(allBookProducts);
+    });
+
+    // buyer product get by id
+    app.get("/buyerBookProducts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const buyerBooking = await buyerBookProductCollection.findOne(query);
+      res.send(buyerBooking);
     });
 
     // buyer book products
