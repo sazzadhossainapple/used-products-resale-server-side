@@ -109,10 +109,35 @@ const getByEmamil = asyncWrapper(async (req, res, next) => {
     res.success(user, 'User successfully');
 });
 
+/**
+ * user login
+ *
+ * URI: /api/users/login
+ *
+ * @param {req} req
+ * @param {res} res
+ * @param {next} next
+ * @returns
+ */
+
+const jwtToken = asyncWrapper(async (req, res) => {
+    const { email } = req.params;
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+        throw new GeneralError('No user found. Please create an account');
+    }
+
+    const token = generateToken(user);
+    const { ...others } = user.toObject();
+    res.success({ user: others, token }, 'Successfully logged in');
+});
+
 module.exports = {
     index,
     store,
     destroy,
     update,
     getByEmamil,
+    jwtToken,
 };
