@@ -1,9 +1,10 @@
 const asyncWrapper = require('../middleware/asyncWrapper');
 const {
-    getAllProductList,
     findProductBy,
     deleteProduct,
     buyerProductCreate,
+    getAllProduct,
+    getAllUserProduct,
 } = require('../service/buyerBookProduct.service');
 
 const { GeneralError } = require('../utils/error');
@@ -11,7 +12,7 @@ const { GeneralError } = require('../utils/error');
 /**
  * get all user product
  *
- * URI: /api/users/product
+ * URI: /api/product-list
  *
  * @param {req} req
  * @param {res} res
@@ -20,8 +21,6 @@ const { GeneralError } = require('../utils/error');
  */
 const index = asyncWrapper(async (req, res, next) => {
     let filters = { ...req.query };
-
-    console.log(filters);
 
     //  page, limit, -> exclude
     const excludeFields = ['page', 'limit'];
@@ -45,7 +44,47 @@ const index = asyncWrapper(async (req, res, next) => {
         queries.limit = parseInt(limit);
     }
 
-    const product = await getAllProductList(filters, queries);
+    const product = await getAllProduct(filters, queries);
+
+    res.success(product, 'Product successfully');
+});
+
+/**
+ * get all request user product
+ *
+ * URI: /api/product-list/user
+ *
+ * @param {req} req
+ * @param {res} res
+ * @param {next} next
+ * @returns
+ */
+const indexByUser = asyncWrapper(async (req, res, next) => {
+    let filters = { ...req.query };
+
+    //  page, limit, -> exclude
+    const excludeFields = ['page', 'limit'];
+    excludeFields.forEach((field) => delete filters[field]);
+
+    if (req.user.email) {
+        filters.email = req.user.email;
+    }
+
+    const queries = {};
+
+    if (req.query.fields) {
+        const fields = req.query.fields.split(',').join(' ');
+        queries.fields = fields;
+    }
+
+    if (req.query.page) {
+        const { page = 1, limit = 6 } = req.query;
+        const skip = (page - 1) * parseInt(limit);
+        queries.skip = skip;
+        queries.limit = parseInt(limit);
+    }
+
+    const product = await getAllUserProduct(filters, queries);
 
     res.success(product, 'Product successfully');
 });
@@ -53,7 +92,7 @@ const index = asyncWrapper(async (req, res, next) => {
 /**
  * create product
  *
- * URI: /api/users/product
+ * URI: /api/product-list
  *
  * @param {req} req
  * @param {res} res
@@ -93,7 +132,7 @@ const store = asyncWrapper(async (req, res, next) => {
 /**
  * get by product id
  *
- * URI: /api/users/product/:id
+ * URI: /api/product-list/:id
  *
  * @param {req} req
  * @param {res} res
@@ -111,7 +150,7 @@ const getById = asyncWrapper(async (req, res, next) => {
 /**
  * update product
  *
- * URI:/api/users/product/:id
+ * URI:/api/product-list/:id
  *
  * @param {req} req
  * @param {res} res
@@ -154,7 +193,7 @@ const update = asyncWrapper(async (req, res, next) => {
 /**
  * delete product
  *
- * URI: /api/users/products/:id
+ * URI: /api/product-list/:id
  *
  * @param {req} req
  * @param {res} res
@@ -177,4 +216,5 @@ module.exports = {
     destroy,
     update,
     getById,
+    indexByUser,
 };

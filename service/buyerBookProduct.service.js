@@ -1,18 +1,31 @@
 const BuyerBookProduct = require('../model/buyerBookProduct.model');
 
 // get all product
-const getAllProductList = async (filters, queries) => {
-    const product = await BuyerBookProduct.find(filters)
+const getAllProduct = async (filters, queries) => {
+    const productList = await BuyerBookProduct.find(filters)
         .skip(queries.skip)
         .limit(queries.limit)
         .sort({
             createdAt: -1,
             updatedAt: -1,
         });
-
     const totalProduct = await BuyerBookProduct.countDocuments(filters);
     const page = Math.ceil(totalProduct / queries.limit);
-    return { totalProduct, page, product };
+    return { totalProduct, page, productList };
+};
+
+// get by user product
+const getAllUserProduct = async (filters, queries) => {
+    const productList = await BuyerBookProduct.find(filters)
+        .skip(queries.skip)
+        .limit(queries.limit)
+        .sort({
+            createdAt: -1,
+            updatedAt: -1,
+        });
+    const totalProduct = await BuyerBookProduct.countDocuments(filters);
+    const page = Math.ceil(totalProduct / queries.limit);
+    return { totalProduct, page, productList };
 };
 
 const buyerProductCreate = async (project) => {
@@ -40,9 +53,10 @@ const deleteProduct = async (id) => {
 };
 
 module.exports = {
-    getAllProductList,
+    getAllProduct,
     findProductBy,
     buyerProductCreate,
     deleteProduct,
     updateProduct,
+    getAllUserProduct,
 };

@@ -4,11 +4,13 @@ const { auth } = require('../middleware');
 
 const router = express.Router();
 
-const { index, store, destroy, update, getById } = buyerBookProductController;
+const { index, indexByUser, store, destroy, update, getById } =
+    buyerBookProductController;
 
 // Register application routes here...
 
 router.route('/').get(auth, index).post(auth, store);
+router.route('/user').get(auth, indexByUser);
 
 router.route('/:id').get(auth, getById).put(auth, update).delete(auth, destroy);
 
