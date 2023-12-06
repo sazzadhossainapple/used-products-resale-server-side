@@ -6,6 +6,8 @@ const {
     updateProduct,
     deleteProduct,
 } = require('../service/product.service');
+const ProductCategory = require('../model/productCategory.model');
+
 const { GeneralError } = require('../utils/error');
 
 /**
@@ -108,6 +110,8 @@ const store = asyncWrapper(async (req, res, next) => {
 const getBySlug = asyncWrapper(async (req, res, next) => {
     const { id } = req.params;
     const product = await findProductBySlug(id);
+    console.log(product);
+    // const productCategory = await ProductCategory.findOne({ slug: id })
 
     res.success(product, 'Product successfully');
 });

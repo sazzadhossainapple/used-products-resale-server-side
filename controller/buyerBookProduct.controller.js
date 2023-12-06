@@ -143,7 +143,6 @@ const store = asyncWrapper(async (req, res, next) => {
 const getById = asyncWrapper(async (req, res, next) => {
     const { id } = req.params;
     const product = await findProductBy(id);
-
     res.success(product, 'Product successfully');
 });
 

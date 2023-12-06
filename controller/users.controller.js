@@ -133,6 +133,49 @@ const jwtToken = asyncWrapper(async (req, res) => {
     res.success({ user: others, token }, 'Successfully logged in');
 });
 
+/**
+ * Check whether logged in user is seller
+ *
+ * URI: /api/users/seller
+ *
+ * @param {req} req
+ * @param {res} res
+ * @param {next} next
+ * @returns
+ */
+
+const checkIfSeller = asyncWrapper(async (req, res) => {
+    let { email } = req.user;
+    console.log('User email:', email);
+
+    const user = await findUserByEmail(email);
+    console.log('User:', user);
+
+    if (user?.role === 'Seller') res.success(true);
+    else res.success(false);
+});
+
+/**
+ * Check whether logged in user is admin
+ *
+ * URI: /api/users/admin
+ *
+ * @param {req} req
+ * @param {res} res
+ * @param {next} next
+ * @returns
+ */
+
+const checkIfAdmin = asyncWrapper(async (req, res) => {
+    let { email } = req.user;
+    console.log('User email:', email);
+    const user = await findUserByEmail(email);
+    console.log('User:', user);
+
+    if (user.role === 'Admin') res.success(true);
+    else res.success(false);
+});
+
 module.exports = {
     index,
     store,
@@ -140,4 +183,6 @@ module.exports = {
     update,
     getByEmamil,
     jwtToken,
+    checkIfSeller,
+    checkIfAdmin,
 };
