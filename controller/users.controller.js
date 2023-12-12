@@ -21,7 +21,32 @@ const { GeneralError } = require('../utils/error');
  * @returns
  */
 const index = asyncWrapper(async (req, res, next) => {
-    const users = await getAllUsersServices({});
+    let filters = { ...req.query };
+
+    //  page, limit, -> exclude
+    const excludeFields = ['page', 'limit'];
+    excludeFields.forEach((field) => delete filters[field]);
+
+    const queries = {};
+
+    if (req.query.fields) {
+        const fields = req.query.fields.split(',').join(' ');
+        queries.fields = fields;
+    }
+
+    /* Search on the  of page Select name */
+    //  if (req.query.selectPage) {
+    //     queries.selectPage = new RegExp(queries.selectPage, "i");
+    //   }
+
+    if (req.query.page) {
+        const { page = 1, limit = 50 } = req.query;
+        const skip = (page - 1) * parseInt(limit);
+        queries.skip = skip;
+        queries.limit = parseInt(limit);
+    }
+
+    const users = await getAllUsersServices(filters, queries);
     res.success(users, 'Users successfully');
 });
 
@@ -37,14 +62,14 @@ const index = asyncWrapper(async (req, res, next) => {
  */
 
 const store = asyncWrapper(async (req, res, next) => {
-    const { UserName, email, userImage } = req.body;
+    const { UserName, email, userImage, role } = req.body;
 
     const oldUser = await findUserByEmail(email);
 
     if (oldUser) {
         throw new GeneralError('User Already Exists.');
     }
-    const user = await signupService({ UserName, email, userImage });
+    const user = await signupService({ UserName, email, userImage, role });
 
     res.success(user, 'User create succssfully');
 });
@@ -134,6 +159,26 @@ const jwtToken = asyncWrapper(async (req, res) => {
 });
 
 /**
+ * Check whether logged in user is buyer
+ *
+ * URI: /api/users/buyer
+ *
+ * @param {req} req
+ * @param {res} res
+ * @param {next} next
+ * @returns
+ */
+
+const checkIfBuyer = asyncWrapper(async (req, res) => {
+    let { email } = req.user;
+
+    const user = await findUserByEmail(email);
+
+    if (user?.role === 'Buyer') res.success(true);
+    else res.success(false);
+});
+
+/**
  * Check whether logged in user is seller
  *
  * URI: /api/users/seller
@@ -146,10 +191,8 @@ const jwtToken = asyncWrapper(async (req, res) => {
 
 const checkIfSeller = asyncWrapper(async (req, res) => {
     let { email } = req.user;
-    console.log('User email:', email);
 
     const user = await findUserByEmail(email);
-    console.log('User:', user);
 
     if (user?.role === 'Seller') res.success(true);
     else res.success(false);
@@ -168,9 +211,8 @@ const checkIfSeller = asyncWrapper(async (req, res) => {
 
 const checkIfAdmin = asyncWrapper(async (req, res) => {
     let { email } = req.user;
-    console.log('User email:', email);
+
     const user = await findUserByEmail(email);
-    console.log('User:', user);
 
     if (user.role === 'Admin') res.success(true);
     else res.success(false);
@@ -185,4 +227,5 @@ module.exports = {
     jwtToken,
     checkIfSeller,
     checkIfAdmin,
+    checkIfBuyer,
 };

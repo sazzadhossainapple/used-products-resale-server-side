@@ -1,12 +1,17 @@
 const User = require('../model/users.model');
 
 // get all users
-const getAllUsersServices = async (query) => {
-    const users = await User.find(query).sort({
-        createdAt: -1,
-        updatedAt: -1,
-    });
-    return users;
+const getAllUsersServices = async (filters, queries) => {
+    const users = await User.find(filters)
+        .skip(queries.skip)
+        .limit(queries.limit)
+        .sort({
+            createdAt: -1,
+            updatedAt: -1,
+        });
+    const totalUserLists = await User.countDocuments(filters);
+    const page = Math.ceil(totalUserLists / queries.limit);
+    return { totalUserLists, page, users };
 };
 
 const signupService = async (userInfo) => {
