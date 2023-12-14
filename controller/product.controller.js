@@ -37,6 +37,9 @@ const index = asyncWrapper(async (req, res, next) => {
     if (req.query.catagory_slug) {
         queries.catagory_slug = new RegExp(queries.catagory_slug, 'i');
     }
+    if (req.query.email) {
+        queries.email = new RegExp(queries.email, 'i');
+    }
 
     if (req.query.page) {
         const { page = 1, limit = 6 } = req.query;
