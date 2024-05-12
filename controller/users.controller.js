@@ -34,10 +34,10 @@ const index = asyncWrapper(async (req, res, next) => {
         queries.fields = fields;
     }
 
-    /* Search on the  of page Select name */
-    //  if (req.query.selectPage) {
-    //     queries.selectPage = new RegExp(queries.selectPage, "i");
-    //   }
+    /* Search on the  of role */
+    if (req.query.role) {
+        queries.role = new RegExp(queries.role, 'i');
+    }
 
     if (req.query.page) {
         const { page = 1, limit = 50 } = req.query;
